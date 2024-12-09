@@ -1,5 +1,50 @@
 Please Note that for eBPF development, you may need to get these packages:
 sudo apt-get install clang llvm libelf-dev gcc-multilib
+#Question 1 
+## Compile the program 
+make
+
+## Verify the module
+ls -l capsule_comm.ko
+
+## Load the Kernel Module 
+sudo insmod capsule_comm.ko
+
+## Verify that the module is loaded
+lsmod | grep capsule_comm
+
+## Check the kernel logs
+sudo dmesg | tail -20
+
+## Unload the Kernel Module
+sudo rmmod capsule_comm
+
+## Make the script executable
+chmod +x setup_capsules.sh
+
+## Run the script
+sudo ./setup_capsules.sh
+
+## Verify capsules
+ip netns list
+
+## Compile the test program
+gcc internet_test.c -o internet_test
+
+## Run the program in capsule1
+sudo ip netns exec capsule1 ./internet_test
+
+## Compile the server: 
+gcc tcp_server.c -o tcp_server
+
+## Compile the client: 
+gcc tcp_client.c -o tcp_client
+
+## Run the TCP Server
+sudo ip netns exec capsule1 ./tcp_server
+
+## Run the TCP Client
+sudo ip netns exec capsule2 ./tcp_client
 
 # Question 2 Part A
 ## Compile the program
@@ -89,9 +134,14 @@ dmesg | tail
 ### Inspect loaded programs:
 sudo bpftool prog show
 
-# Question 4 Part 1
-
 # Expected Outputs 
+## Question 1 
+### On the server (capsule1):
+Server listening on port 12345...
+Client connected from 192.168.1.3:xxxxx
+### On the client (capsule2):
+Connected to the server successfully
+
 ## Question 2 Part A
 naxi@naxi-VirtualBox:~/Desktop/pa3$ gcc -o count_packets_user count_packets_user.c -lbpf
 naxi@naxi-VirtualBox:~/Desktop/pa3$ sudo ./count_packets_user
