@@ -144,38 +144,42 @@ Client connected from 192.168.1.3:xxxxx
 Connected to the server successfully
 
 ## Question 2 Part A
-naxi@naxi-VirtualBox:~/Desktop/pa3$ gcc -o count_packets_user count_packets_user.c -lbpf
-naxi@naxi-VirtualBox:~/Desktop/pa3$ sudo ./count_packets_user
-Source IP Address      Packet Count
------------------------------------
-20.189.173.17        1
-152.199.4.33         5
-104.18.32.47         746
-10.0.2.3             4
-20.189.173.17        1
-152.199.4.33         5
-104.18.32.47         746
-10.0.2.3             4
-20.189.173.17        1
-152.199.4.33         5
-104.18.32.47         746
-10.0.2.3             4
-20.189.173.17        1
-152.199.4.33         5
-104.18.32.47         746
-10.0.2.3             4
+gcc -o count_packets_user count_packets_user.c -lbpf
+sudo ./count_packets_user
+| Source IP Address | Packet Count |
+|-------------------|--------------|
+| 20.189.173.17     | 1            |
+| 152.199.4.33      | 5            |
+| 104.18.32.47      | 746          |
+| 10.0.2.3          | 4            |
+| 20.189.173.17     | 1            |
+| 152.199.4.33      | 5            |
+| 104.18.32.47      | 746          |
+| 10.0.2.3          | 4            |
+| 20.189.173.17     | 1            |
+| 152.199.4.33      | 5            |
+| 104.18.32.47      | 746          |
+| 10.0.2.3          | 4            |
+| 20.189.173.17     | 1            |
+| 152.199.4.33      | 5            |
+| 104.18.32.47      | 746          |
+| 10.0.2.3          | 4            |
+
 
 ## Question 3 Part A
-naxi@naxi-VirtualBox:~/Desktop/pa3$ clang -g -O2 -target bpf -c load_balancer.c -o load_balancer.o \
+clang -g -O2 -target bpf -c load_balancer.c -o load_balancer.o \
   -I/home/naxi/Desktop/pa3/libbpf/src
-naxi@naxi-VirtualBox:~/Desktop/pa3$ gcc -o load_balancer_user load_balancer_user.c -lbpf -lelf -lz
-naxi@naxi-VirtualBox:~/Desktop/pa3$ sudo ./load_balancer_user enp0s3
+gcc -o load_balancer_user load_balancer_user.c -lbpf -lelf -lz
+sudo ./load_balancer_user enp0s3
 eBPF load balancer attached to interface enp0s3
-naxi@naxi-VirtualBox:~/Desktop/pa3$ llvm-readelf --sections load_balancer.o | grep BTF
-  [16] .BTF              PROGBITS        0000000000000000 000e34 000658 00      0   0  4
-  [17] .rel.BTF          REL             0000000000000000 002190 000030 10   I 26  16  8
-  [18] .BTF.ext          PROGBITS        0000000000000000 00148c 000210 00      0   0  4
-  [19] .rel.BTF.ext      REL             0000000000000000 0021c0 0001e0 10   I 26  18  8
-naxi@naxi-VirtualBox:~/Desktop/pa3$ sudo ./load_balancer_user enp0s3
+
+llvm-readelf --sections load_balancer.o | grep BTF
+|                     |                |                        |                |        |        |   |   |   |
+|---------------------|----------------|------------------------|----------------|--------|--------|---|---|---|
+| [16] .BTF          | PROGBITS       | 0000000000000000       | 000e34         | 000658 | 00     | 0 | 0 | 4 |
+| [17] .rel.BTF      | REL            | 0000000000000000       | 002190         | 000030 | 10  I  | 26 | 16| 8 |
+| [18] .BTF.ext      | PROGBITS       | 0000000000000000       | 00148c         | 000210 | 00     | 0 | 0 | 4 |
+| [19] .rel.BTF.ext  | REL            | 0000000000000000       | 0021c0         | 0001e0 | 10  I  | 26 | 18| 8 |
+
+sudo ./load_balancer_user enp0s3
 eBPF load balancer attached to interface enp0s3
-naxi@naxi-VirtualBox:~/Desktop/pa3$ 
