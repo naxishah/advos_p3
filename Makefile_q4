@@ -1,0 +1,77 @@
+# SPDX-License-Identifier: (LGPL-2.1 OR BSD-2-Clause)
+
+# Set output directory
+OUTPUT := .output
+
+# Set the compiler to clang (assuming you're using clang for BPF programs)
+CLANG ?= clang
+
+# Paths for libbpf and bpftool sources
+LIBBPF_SRC := $(abspath bpftool/libbpf/src)
+BPFTOOL_SRC := $(abspath bpftool/src)
+LIBBPF_OBJ := $(abspath $(OUTPUT)/libbpf.a)
+BPFTOOL_OUTPUT ?= $(abspath $(OUTPUT)/bpftool)
+BPFTOOL ?= $(BPFTOOL_OUTPUT)/bootstrap/bpftool
+
+# Architecture-specific settings
+ARCH ?= $(shell uname -m | sed 's/x86_64/x86/' \
+			 | sed 's/arm.*/arm/' \
+			 | sed 's/aarch64/arm64/' \
+			 | sed 's/ppc64le/powerpc/' \
+			 | sed 's/mips.*/mips/' \
+			 | sed 's/riscv64/riscv/' \
+			 | sed 's/loongarch64/loongarch/')
+VMLINUX := vmlinux.h/include/$(ARCH)/vmlinux.h
+
+# Ensure the kernel headers are available (use uname to find the right path)
+KERNEL_HEADERS := /usr/src/linux-headers-$(shell uname -r)/include
+
+# Include directories (adjust as needed)
+INCLUDES := -I$(OUTPUT) -Ilibbpf/include/uapi -I$(KERNEL_HEADERS) -I$(dir $(VMLINUX))
+
+# Compiler flags
+CFLAGS := -g -Wall -O2
+
+# Linker flags
+ALL_LDFLAGS := $(LDFLAGS) $(EXTRA_LDFLAGS)
+
+# Define the application name (e.g., container_monitor)
+APPS = container_monitor
+
+# Sources for eBPF program and user-space program
+BPF_SRC = container_monitor_bpf.c
+USER_SRC = container_monitor.c
+
+# Object files
+BPF_OBJ = $(OUTPUT)/container_monitor_bpf.o
+USER_OBJ = $(OUTPUT)/container_monitor.o
+
+# Skeleton header file for BPF
+BPF_SKELETON = $(OUTPUT)/container_monitor_bpf.skel.h
+
+# Ensure the output directory exists
+$(OUTPUT):
+	mkdir -p $(OUTPUT)
+
+# Generate skeleton header after compiling eBPF program
+$(OUTPUT)/container_monitor_bpf.o: $(BPF_SRC) | $(OUTPUT)
+	$(CLANG) -target bpf -O2 -c $< -o $@ $(INCLUDES) $(CFLAGS)
+
+$(OUTPUT)/container_monitor_bpf.skel.h: $(OUTPUT)/container_monitor_bpf.o
+	clang -target bpf -O2 -c $^ -o $@
+
+$(OUTPUT)/container_monitor.o: $(USER_SRC) | $(OUTPUT)
+	$(CLANG) -O2 -c $< -o $@ $(INCLUDES) $(CFLAGS)
+
+# Link the BPF object files with the user-space program
+$(OUTPUT)/container_monitor: $(BPF_OBJ) $(USER_OBJ) $(BPF_SKELETON)
+	$(CLANG) -O2 -o $@ $^ -lelf -lz -lm -lpthread
+
+# Clean generated files
+clean:
+	rm -rf $(OUTPUT) $(APPS)
+
+# Ensure intermediate files are not deleted unless error
+.SECONDARY:
+
+.PHONY: all clean
